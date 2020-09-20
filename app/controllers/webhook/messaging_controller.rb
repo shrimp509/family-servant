@@ -7,17 +7,26 @@ class Webhook::MessagingController < Webhook::ApplicationController
   before_action :setup_event_type, only: :hello
   before_action :setup_reply_token, only: :hello
   before_action :setup_message, only: :hello
+  before_action :setup_source_type, only: :hello
+  before_action :setup_group_id, only: :hello
+  before_action :setup_user_id, only: :hello
 
   def hello
     case @event_type
     when :memberJoined
-      response_back('嗨嗨新成員你好')
+      reply('嗨嗨新成員你好')
     when :message
       if @message.include?('僕人') && (@message.include?('出門') || @message.include?('回家'))
-        response_back('好的')
+        response = LineApi.username_from(@user_id)
+        if response['status'] == 200
+          @username = response['displayName']
+        end
+        @action = '出門' if @message.include?('出門')
+        @action = '回家' if @message.include?('回家')
+        reply("好的，#{@username}#{@action}了")
       end
     when :join
-      response_back('感謝你邀請我進群組～')
+      reply('感謝你邀請我進群組～')
     when :leave
       # do nothing currently
     end
@@ -43,7 +52,7 @@ class Webhook::MessagingController < Webhook::ApplicationController
   end
 
   def setup_client
-    @client = Line::Bot::Client.new do |config|
+    @client ||= Line::Bot::Client.new do |config|
       config.channel_secret = '509537605e34d24317b42b5b3eeb9423'
       config.channel_token = '3Tq2rfMNvdTgNz9eRmcBOdSf2/QYAHA9H9ltFtwn2sWJ2/f2z4QZDLsztbCBDfdz6nRgT3ZoSeQSSzdmCwxCw4F5rD6YGYsKRBHEseHQznGaaOSToft09ypVtcG7m14D225py9updhs8N0aOH7pxVwdB04t89/1O/w1cDnyilFU='
     end
@@ -53,7 +62,19 @@ class Webhook::MessagingController < Webhook::ApplicationController
     @message = @events.first.dig(:message, :text)
   end
 
-  def response_back(text)
+  def setup_source_type
+    @source_type = @events.first.dig(:source, :type).to_sym
+  end
+
+  def setup_group_id
+    @group_id = @events.first.dig(:source, :groupId)
+  end
+
+  def setup_user_id
+    @user_id = @events.first.dig(:source, :userId)
+  end
+
+  def reply(text)
     @client.reply_message(@reply_token, {type: 'text', text: text})
   end
 end
