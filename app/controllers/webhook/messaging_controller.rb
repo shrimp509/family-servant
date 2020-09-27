@@ -5,13 +5,15 @@ class Webhook::MessagingController < Webhook::ApplicationController
   before_action :setup_params, only: :hello
 
   def hello
+    get_username
+
     case @event_type
     when :memberJoined
-      reply('嗨嗨新成員你好')
+      reply("嗨嗨，#{@username} 你好阿")
     when :message
       deal_message
     when :join
-      reply('感謝你邀請我進群組～')
+      reply('感謝你們邀請我進群組～')
     when :leave
       # do nothing currently
     end
@@ -29,13 +31,18 @@ class Webhook::MessagingController < Webhook::ApplicationController
       config.channel_secret = '509537605e34d24317b42b5b3eeb9423'
       config.channel_token = '3Tq2rfMNvdTgNz9eRmcBOdSf2/QYAHA9H9ltFtwn2sWJ2/f2z4QZDLsztbCBDfdz6nRgT3ZoSeQSSzdmCwxCw4F5rD6YGYsKRBHEseHQznGaaOSToft09ypVtcG7m14D225py9updhs8N0aOH7pxVwdB04t89/1O/w1cDnyilFU='
     end
-    @events = params[:events]
-    @event_type = @events.first[:type].to_sym
-    @reply_token = @events.first[:replyToken]
-    @message = @events.first.dig(:message, :text)
-    @source_type = @events.first.dig(:source, :type).to_sym
-    @group_id = @events.first.dig(:source, :groupId)
-    @user_id = @events.first.dig(:source, :userId)
+    @event = params[:events]&.first
+    return if @event.nil?
+
+    @event_type = @event[:type].to_sym
+    @reply_token = @event[:replyToken]
+    @message = @event.dig(:message, :text)
+    @source_type = @event.dig(:source, :type).to_sym
+    @group_id = @event.dig(:source, :groupId)
+    @user_id = @event.dig(:source, :userId)
+
+    user = User.where(line_user_id: @user_id)
+    User.create(line_user_id: @user_id) if user.nil?
   end
 
   def reply(text)
@@ -43,14 +50,26 @@ class Webhook::MessagingController < Webhook::ApplicationController
   end
 
   def deal_message
-    if @message.include?('僕人')
-      response = LineApi.username_from(@user_id)
-      if response['status'] == 200
-        @username = response['displayName']
-      end
-      @action = '出門' if @message.include?('出門')
-      @action = '回家' if @message.include?('回家')
-      reply("好的，#{@username}#{@action}了")
+    case
+    when @message.include?('我想記錄')
+      reply('OK唷')
+    when @message.include?('記錄')
+      # reply('請跟我說想要記錄什麼')
+      record_message_format
+    when @message.include?('歷史')
+      reply('想查什麼歷史紀錄呢？')
+    else
+      reply("嗨 #{@username} 主人，我目前有兩種功能：一個是`記錄`、一個是`歷史`哦")
     end
+  end
+
+  def get_username
+    response = LineApi.username_from(@user_id)
+    @username = response['displayName'] if response['status'] == 200
+  end
+
+  def record_message_format
+    data = JSON.load(Rails.root.join('app/assets/messages/example_message2.json'))
+    @client.reply_message(@reply_token, data)
   end
 end

@@ -1,0 +1,29 @@
+{
+  "type": "template",
+  "altText": "this is a buttons template",
+  "template": {
+    "type": "buttons",
+    "imageAspectRatio": "square",
+    "text": "您想要記錄什麼？",
+    "actions": [
+      {
+        "type": "postback",
+        "label": "大便",
+        "text": "我想記錄大便",
+        "data": "1"
+      },
+      {
+        "type": "postback",
+        "label": "放屁",
+        "text": "我想記錄放屁",
+        "data": "2"
+      },
+      {
+        "type": "postback",
+        "label": "尿尿",
+        "text": "我想記錄尿尿",
+        "data": "3"
+      }
+    ]
+  }
+}
