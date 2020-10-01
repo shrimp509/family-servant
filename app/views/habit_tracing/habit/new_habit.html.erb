@@ -1,0 +1,8 @@
+<h1>新建想追蹤的習慣</h1>
+<%= form_tag habit_tracing_new_habit_path, remote: true do %>
+  <div>
+    <%= hidden_field_tag :line_user_id, @line_user_id %>
+    <%= text_field_tag :habit_title, '', required: true %>
+    <%= submit_tag '建起來' %>
+  </div>
+<% end %>

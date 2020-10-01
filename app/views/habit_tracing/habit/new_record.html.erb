@@ -1,0 +1,12 @@
+<% @topic_id = 31 if @topic_id.nil? %>
+<% @line_user_id = 'U46acae51db9af9d9322a935b35e64f36' if @line_user_id.nil? %>
+
+<h1>新增一筆 <%= Topic.find_by(id: @topic_id).title %> 的紀錄</h1>
+<%= form_tag habit_tracing_new_record_path, remote: true do %>
+  <div>
+    <%= hidden_field_tag :line_user_id, @line_user_id %>
+    <%= hidden_field_tag :topic_id, @topic_id %>
+    備註：<%= text_area_tag :record_remark %><br><br>
+    <%= submit_tag '建起來' %>
+  </div>
+<% end %>

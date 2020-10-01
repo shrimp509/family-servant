@@ -41,10 +41,10 @@ class Webhook::MessagingController < Webhook::ApplicationController
     @message = @event.dig(:message, :text)
     @source_type = @event.dig(:source, :type).to_sym
     @group_id = @event.dig(:source, :groupId)
-    @user_id = @event.dig(:source, :userId)
+    @line_user_id = @event.dig(:source, :userId)
 
-    user = User.where(line_user_id: @user_id)
-    User.create(line_user_id: @user_id) if user.nil?
+    @user = User.find_by(line_user_id: @line_user_id)
+    @user = User.create(line_user_id: @line_user_id) if @user.nil?
   end
 
   def reply(text)
@@ -53,29 +53,34 @@ class Webhook::MessagingController < Webhook::ApplicationController
 
   def deal_message
     case
-    when @message.include?('記錄')
+    when @message.include?('記錄') || @message.include?('紀錄')
       reply_record_message
+    when @message.include?('查詢')
+      records_count = @user.records.where("created_at > #{(Time.now-7.days).to_time.to_i}").count
+      reply("你在一個禮拜內總共記錄了#{records_count}筆")
     else
       reply("嗨 #{@username} 主人")
     end
   end
 
   def get_username
-    response = LineApi.username_from(@user_id)
+    response = LineApi.username_from(@line_user_id)
     @username = response['displayName'] if response['status'] == 200
   end
 
   def reply_record_message
     data = JSON.load(Rails.root.join('app/assets/messages/habit_list_format.json'))
-    Topic.where(user_id: 1).all.each do |habit|
-      data['template']['actions'] << habit_item(habit.title)
+    @topics = Topic.where(user_id: @user.id).all
+    @topics.each do |habit|
+      data['template']['actions'] << habit_item(habit.title, habit.id)
     end
+    binding.pry
     data['template']['actions'] << new_habit_item
     @client.reply_message(@reply_token, data)
   end
 
-  def habit_item(title)
-    uri_format('new_record', {title: title})
+  def habit_item(title, topic_id)
+    uri_format('new_record', {title: title, topic_id: topic_id})
   end
 
   def new_habit_item
@@ -84,8 +89,8 @@ class Webhook::MessagingController < Webhook::ApplicationController
 
   def uri_format(action, params)
     uri = File.join(BASE_URL, 'habit_tracing', action).to_s << '?'
-    params.map { |k, v| uri << "#{k}=#{v}" } if params.present?
-    uri << "&line_user_id=#{@user_id}"
+    out = params.map {|k,v| "#{k}=#{v}"} if params.present?
+    uri << "#{out.join('&')}&line_user_id=#{@line_user_id}"
     {
       type: 'uri',
       label: params[:title],
