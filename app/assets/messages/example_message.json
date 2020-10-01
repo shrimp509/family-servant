@@ -1,61 +1,25 @@
 {
-  "type": "bubble",
-  "direction": "ltr",
-  "header": {
-    "type": "box",
-    "layout": "vertical",
-    "contents": [
+  "type": "template",
+  "altText": "this is a buttons template",
+  "template": {
+    "type": "buttons",
+    "imageAspectRatio": "rectangle",
+    "text": "您想要記錄什麼？",
+    "actions": [
       {
-        "type": "text",
-        "text": "您想要記錄什麼呢？",
-        "weight": "bold",
-        "size": "lg",
-        "color": "#000000FF",
-        "align": "center",
-        "margin": "none",
-        "contents": []
-      }
-    ]
-  },
-  "body": {
-    "type": "box",
-    "layout": "vertical",
-    "contents": [
-      {
-        "type": "button",
-        "action": {
-          "type": "postback",
-          "label": "放屁",
-          "text": "topic_id",
-          "data": "1"
-        },
-        "style": "primary"
+        "type": "uri",
+        "label": "大便",
+        "uri": "https://9c51dda29cec.ngrok.io/habit_tracing/new_record"
       },
       {
-        "type": "button",
-        "action": {
-          "type": "postback",
-          "label": "大便",
-          "text": "topic_id",
-          "data": "2"
-        },
-        "style": "primary"
-      }
-    ]
-  },
-  "footer": {
-    "type": "box",
-    "layout": "horizontal",
-    "contents": [
+        "type": "uri",
+        "label": "放屁",
+        "uri": "https://9c51dda29cec.ngrok.io/habit_tracing/new_record"
+      },
       {
-        "type": "button",
-        "action": {
-          "type": "postback",
-          "label": "新增一個議題",
-          "text": "add_topic",
-          "data": "null"
-        },
-        "style": "secondary"
+        "type": "uri",
+        "label": "尿尿",
+        "uri": "https://9c51dda29cec.ngrok.io/habit_tracing/new_record"
       }
     ]
   }

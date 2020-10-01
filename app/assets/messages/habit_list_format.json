@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "altText": "this is a buttons template",
+  "template": {
+    "type": "buttons",
+    "imageAspectRatio": "rectangle",
+    "text": "你想要記錄什麼？",
+    "actions": []
+  }
+}

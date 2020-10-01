@@ -4,6 +4,8 @@ class Webhook::MessagingController < Webhook::ApplicationController
   before_action :messaging_params, only: :hello
   before_action :setup_params, only: :hello
 
+  BASE_URL = 'https://9c51dda29cec.ngrok.io/'
+
   def hello
     get_username
 
@@ -51,15 +53,10 @@ class Webhook::MessagingController < Webhook::ApplicationController
 
   def deal_message
     case
-    when @message.include?('我想記錄')
-      reply('OK唷')
     when @message.include?('記錄')
-      # reply('請跟我說想要記錄什麼')
-      record_message_format
-    when @message.include?('歷史')
-      reply('想查什麼歷史紀錄呢？')
+      reply_record_message
     else
-      reply("嗨 #{@username} 主人，我目前有兩種功能：一個是`記錄`、一個是`歷史`哦")
+      reply("嗨 #{@username} 主人")
     end
   end
 
@@ -68,8 +65,30 @@ class Webhook::MessagingController < Webhook::ApplicationController
     @username = response['displayName'] if response['status'] == 200
   end
 
-  def record_message_format
-    data = JSON.load(Rails.root.join('app/assets/messages/example_message2.json'))
+  def reply_record_message
+    data = JSON.load(Rails.root.join('app/assets/messages/habit_list_format.json'))
+    Topic.where(user_id: 1).all.each do |habit|
+      data['template']['actions'] << habit_item(habit.title)
+    end
+    data['template']['actions'] << new_habit_item
     @client.reply_message(@reply_token, data)
+  end
+
+  def habit_item(title)
+    uri_format(BASE_URL, 'new_record', {title: title})
+  end
+
+  def new_habit_item
+    uri_format(BASE_URL, 'new_habit', {title: '新增想追蹤的習慣'})
+  end
+
+  def uri_format(base_url, action, params)
+    uri = URI::join(base_url, 'habit_tracing', action).to_s << '?'
+    params.map { |k, v| uri << "#{k}=#{v}" }
+    {
+      type: 'uri',
+      label: params[:title],
+      uri: uri
+    }
   end
 end
