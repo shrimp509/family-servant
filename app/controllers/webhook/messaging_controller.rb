@@ -75,16 +75,17 @@ class Webhook::MessagingController < Webhook::ApplicationController
   end
 
   def habit_item(title)
-    uri_format(BASE_URL, 'new_record', {title: title})
+    uri_format('new_record', {title: title})
   end
 
   def new_habit_item
-    uri_format(BASE_URL, 'new_habit', {title: '新增想追蹤的習慣'})
+    uri_format('new_habit', {title: '新增想追蹤的習慣'})
   end
 
-  def uri_format(base_url, action, params)
-    uri = URI::join(base_url, 'habit_tracing', action).to_s << '?'
-    params.map { |k, v| uri << "#{k}=#{v}" }
+  def uri_format(action, params)
+    uri = File.join(BASE_URL, 'habit_tracing', action).to_s << '?'
+    params.map { |k, v| uri << "#{k}=#{v}" } if params.present?
+    uri << "&line_user_id=#{@user_id}"
     {
       type: 'uri',
       label: params[:title],
