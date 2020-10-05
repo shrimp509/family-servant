@@ -22,4 +22,7 @@ test:
 
 production:
   <<: *default
-  database: db/production.sqlite3
+  adapter: postgresql
+  encoding: unicode
+  database: family_servant_production
+  password: <%= ENV['MYAPP_DATABASE_PASSWORD'] %>
